@@ -4,6 +4,8 @@ from data_loader import *
 # sys.path.append('./')
 from model.models import *
 
+import wandb
+
 class Runner(object):
 
 	def load_data(self):
@@ -281,6 +283,20 @@ class Runner(object):
 		right_results = self.predict(split=split, mode='head_batch')
 		results       = get_combined_results(left_results, right_results)
 		self.logger.info('[Epoch {} {}]: MRR: Tail : {:.5}, Head : {:.5}, Avg : {:.5}'.format(epoch, split, results['left_mrr'], results['right_mrr'], results['mrr']))
+
+		# Log head/tail specific metrics to wandb
+		prefix = f'{split}/'
+		wandb.log({
+			f'{prefix}left_mrr': results['left_mrr'],
+			f'{prefix}right_mrr': results['right_mrr'],
+			f'{prefix}left_mr': results['left_mr'],
+			f'{prefix}right_mr': results['right_mr'],
+			f'{prefix}left_hits@1': results['left_hits@1'],
+			f'{prefix}right_hits@1': results['right_hits@1'],
+			f'{prefix}left_hits@10': results['left_hits@10'],
+			f'{prefix}right_hits@10': results['right_hits@10'],
+		})
+
 		return results
 
 	def predict(self, split='valid', mode='tail_batch'):
@@ -356,7 +372,13 @@ class Runner(object):
 			losses.append(loss.item())
 
 			if step % 100 == 0:
-				self.logger.info('[E:{}| {}]: Train Loss:{:.5},  Val MRR:{:.5}\t{}'.format(epoch, step, np.mean(losses), self.best_val_mrr, self.p.name))
+				avg_loss = np.mean(losses)
+				self.logger.info('[E:{}| {}]: Train Loss:{:.5},  Val MRR:{:.5}\t{}'.format(epoch, step, avg_loss, self.best_val_mrr, self.p.name))
+				wandb.log({
+					'train/step_loss': avg_loss,
+					'train/step': step + epoch * len(self.data_iter['train']),
+					'epoch': epoch,
+				})
 
 		loss = np.mean(losses)
 		self.logger.info('[Epoch:{}]:  Training Loss:{:.4}\n'.format(epoch, loss))
@@ -369,11 +391,18 @@ class Runner(object):
 
 		Parameters
 		----------
-		
+
 		Returns
 		-------
 		"""
-		self.best_val_mrr, self.best_val, self.best_epoch, val_mrr = 0., {}, 0, 0.
+		# Initialize wandb logging
+		wandb.init(
+			project='compgcn',
+			name=self.p.name,
+			config=vars(self.p)
+		)
+
+		self.best_val_mrr, self.best_val, self.best_epoch, val_mrr = 0., {}, 0, 0
 		save_path = os.path.join('./checkpoints', self.p.name)
 
 		if self.p.restore:
@@ -385,19 +414,33 @@ class Runner(object):
 			train_loss  = self.run_epoch(epoch, val_mrr)
 			val_results = self.evaluate('valid', epoch)
 
+			# Log epoch-level metrics to wandb
+			wandb.log({
+				'epoch': epoch,
+				'train/loss': train_loss,
+				'valid/mrr': val_results['mrr'],
+				'valid/mr': val_results['mr'],
+				'valid/hits@1': val_results['hits@1'],
+				'valid/hits@3': val_results['hits@3'],
+				'valid/hits@10': val_results['hits@10'],
+			})
+
 			if val_results['mrr'] > self.best_val_mrr:
 				self.best_val	   = val_results
 				self.best_val_mrr  = val_results['mrr']
 				self.best_epoch	   = epoch
 				self.save_model(save_path)
 				kill_cnt = 0
+				wandb.log({'valid/best_mrr': self.best_val_mrr, 'valid/best_epoch': epoch})
 			else:
 				kill_cnt += 1
 				if kill_cnt % 10 == 0 and self.p.gamma > 5:
-					self.p.gamma -= 5 
+					self.p.gamma -= 5
 					self.logger.info('Gamma decay on saturation, updated value of gamma: {}'.format(self.p.gamma))
-				if kill_cnt > 25: 
+					wandb.log({'train/gamma': self.p.gamma})
+				if kill_cnt > 25:
 					self.logger.info("Early Stopping!!")
+					wandb.log({'early_stop': True, 'early_stop_epoch': epoch})
 					break
 
 			self.logger.info('[Epoch {}]: Training Loss: {:.5}, Valid MRR: {:.5}\n\n'.format(epoch, train_loss, self.best_val_mrr))
@@ -405,6 +448,15 @@ class Runner(object):
 		self.logger.info('Loading best model, Evaluating on Test data')
 		self.load_model(save_path)
 		test_results = self.evaluate('test', epoch)
+
+		# Log final test results to wandb
+		wandb.log({
+			'test/mrr': test_results['mrr'],
+			'test/mr': test_results['mr'],
+			'test/hits@1': test_results['hits@1'],
+			'test/hits@3': test_results['hits@3'],
+			'test/hits@10': test_results['hits@10'],
+		})
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description='Parser For Arguments', formatter_class=argparse.ArgumentDefaultsHelpFormatter)

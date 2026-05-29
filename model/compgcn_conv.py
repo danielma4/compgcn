@@ -40,9 +40,11 @@ class CompGCNConv(MessagePassing):
 		self.in_norm     = self.compute_norm(self.in_index,  num_ent)
 		self.out_norm    = self.compute_norm(self.out_index, num_ent)
 		
+		# propogate messages throught the 3 types of edges
 		in_res		= self.propagate('add', self.in_index,   x=x, edge_type=self.in_type,   rel_embed=rel_embed, edge_norm=self.in_norm, 	mode='in')
 		loop_res	= self.propagate('add', self.loop_index, x=x, edge_type=self.loop_type, rel_embed=rel_embed, edge_norm=None, 		mode='loop')
 		out_res		= self.propagate('add', self.out_index,  x=x, edge_type=self.out_type,  rel_embed=rel_embed, edge_norm=self.out_norm,	mode='out')
+		# aggregate all the information with dropout
 		out		= self.drop(in_res)*(1/3) + self.drop(out_res)*(1/3) + loop_res*(1/3)
 
 		if self.p.bias: out = out + self.bias
@@ -50,6 +52,7 @@ class CompGCNConv(MessagePassing):
 
 		return self.act(out), torch.matmul(rel_embed, self.w_rel)[:-1]		# Ignoring the self loop inserted
 
+	# compositions for relations (incoming, outgoing, self-loop) and entity 
 	def rel_transform(self, ent_embed, rel_embed):
 		if   self.p.opn == 'corr': 	trans_embed  = ccorr(ent_embed, rel_embed)
 		elif self.p.opn == 'sub': 	trans_embed  = ent_embed - rel_embed

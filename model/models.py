@@ -40,12 +40,15 @@ class CompGCNBase(BaseModel):
 
 	def forward_base(self, sub, rel, drop1, drop2):
 
+		# initialize relations 
 		r	= self.init_rel if self.p.score_func != 'transe' else torch.cat([self.init_rel, -self.init_rel], dim=0)
+		# apply convolutions and dropout
 		x, r	= self.conv1(self.init_embed, self.edge_index, self.edge_type, rel_embed=r)
 		x	= drop1(x)
 		x, r	= self.conv2(x, self.edge_index, self.edge_type, rel_embed=r) 	if self.p.gcn_layer == 2 else (x, r)
 		x	= drop2(x) 							if self.p.gcn_layer == 2 else x
 
+		# get embeddings for sub and rel
 		sub_emb	= torch.index_select(x, 0, sub)
 		rel_emb	= torch.index_select(r, 0, rel)
 
@@ -60,8 +63,10 @@ class CompGCN_TransE(CompGCNBase):
 	def forward(self, sub, rel):
 
 		sub_emb, rel_emb, all_ent	= self.forward_base(sub, rel, self.drop, self.drop)
+		# add relation to subject
 		obj_emb				= sub_emb + rel_emb
 
+		# compute scores
 		x	= self.p.gamma - torch.norm(obj_emb.unsqueeze(1) - all_ent, p=1, dim=2)		
 		score	= torch.sigmoid(x)
 
