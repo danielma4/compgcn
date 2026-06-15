@@ -1,0 +1,44 @@
+{
+  "os": "Linux-6.8.0-111-generic-x86_64-with-glibc2.35",
+  "python": "CPython 3.10.20",
+  "startedAt": "2026-06-03T02:45:35.326796Z",
+  "args": [
+    "--config",
+    "config/brick.yaml"
+  ],
+  "program": "/home/katris02/compgcn/run.py",
+  "codePath": "run.py",
+  "codePathLocal": "run.py",
+  "git": {
+    "remote": "https://github.com/danielma4/compgcn.git",
+    "commit": "396379540123a7d098c5b19e66c6d53b89539db2"
+  },
+  "email": "ma.dan@northeastern.edu",
+  "root": "/home/katris02/compgcn",
+  "host": "SmartBuilding",
+  "executable": "/home/katris02/miniconda3/envs/compgcn/bin/python",
+  "cpu_count": 24,
+  "cpu_count_logical": 32,
+  "gpu": "NVIDIA GeForce RTX 4090",
+  "gpu_count": 1,
+  "disk": {
+    "/": {
+      "total": "527294529536",
+      "used": "377894117376"
+    }
+  },
+  "memory": {
+    "total": "101065641984"
+  },
+  "gpu_nvidia": [
+    {
+      "name": "NVIDIA GeForce RTX 4090",
+      "memoryTotal": "24146608128",
+      "cudaCores": 16384,
+      "architecture": "Ada",
+      "uuid": "GPU-356803a2-a9b4-2f4f-7ee6-fd3a0dd7c276"
+    }
+  ],
+  "cudaVersion": "12.2",
+  "writerId": "9l3snm4ccmzzqdjne30kazd7rpao1gso"
+}

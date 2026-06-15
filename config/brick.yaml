@@ -1,0 +1,51 @@
+# Example CompGCN config for the Brick dataset.
+#
+# Usage:
+#     python run.py --config config/brick.yaml
+#
+# Keys are argparse `dest` names (note: a few differ from the CLI flag):
+#     -data  -> dataset      -batch -> batch_size     -epoch    -> max_epochs
+#     -gcn_drop -> dropout
+# Precedence: explicit CLI flag > this file > built-in default. So you can
+# override any single value on the command line, e.g.:
+#     python run.py --config config/brick.yaml --opn mult --gcn_layer 2
+
+name:        rel_pred_mortar
+dataset:     brick_mortar
+model:       compgcn
+score_func:  distmult       # transe | distmult | conve  (distmult: clean relation-prediction objective)
+opn:         corr           # sub | mult | corr  (composition function)
+node_feat:   type           # identity (transductive) | type (inductive: Brick-class features, transfers to new buildings)
+rel_weight:  1.0            # weight of auxiliary relation-prediction loss (predict r from (s,o)); 0 = off
+hard_neg:    10             # type-compatible hard negatives per positive for the edge-existence objective (10:1); 0 = off
+hard_neg_weight: 1.0        # weight of the hard-negative presence loss
+beta:        0.5            # F-beta for presence threshold tuning / model selection; <1 favours precision
+
+# Graph / embedding sizes
+gcn_layer:   2              # number of CompGCN layers (try 1 or 2)
+init_dim:    100
+gcn_dim:     200
+embed_dim:   200
+num_bases:   -1             # -1 = no basis decomposition (fine with few relations)
+
+# Optimisation
+batch_size:  128
+max_epochs:  500
+lr:          0.001
+l2:          0.0
+lbl_smooth:  0.1
+gamma:       40.0
+
+# Regularisation / dropout
+dropout:     0.1            # -gcn_drop
+hid_drop:    0.3
+hid_drop2:   0.3            # ConvE
+feat_drop:   0.3            # ConvE
+
+# Misc
+gpu:         '0'
+seed:        41504
+num_workers: 10
+cv_alloc:    5              # building-allocation folds (test stays fixed)
+cv_seeds:    3              # seeds per allocation -> 5*3 = 15 runs, reported mean±std
+wandb_disabled: true

@@ -1,0 +1,1 @@
+{"_step":158,"train/step_loss":0.0011414753120225756,"valid/mrr":0.04045,"epoch":25,"valid/hits@1":0,"valid/hits@10":0.11304,"_wandb":{"runtime":540},"valid/hits@3":0.0644,"train/loss":0.001152299079107429,"_timestamp":1.7804552767675579e+09,"valid/mr":6777.57805,"_runtime":540}

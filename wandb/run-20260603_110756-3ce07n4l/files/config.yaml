@@ -1,0 +1,143 @@
+_wandb:
+    value:
+        cli_version: 0.27.0
+        e:
+            x5j0m7qzq59nigqn7hme7jn9joer0lx4:
+                args:
+                    - --config
+                    - config/brick.yaml
+                codePath: run.py
+                codePathLocal: run.py
+                cpu_count: 24
+                cpu_count_logical: 32
+                cudaVersion: "12.2"
+                disk:
+                    /:
+                        total: "527294529536"
+                        used: "378027335680"
+                email: ma.dan@northeastern.edu
+                executable: /home/katris02/miniconda3/envs/compgcn/bin/python
+                git:
+                    commit: 396379540123a7d098c5b19e66c6d53b89539db2
+                    remote: https://github.com/danielma4/compgcn.git
+                gpu: NVIDIA GeForce RTX 4090
+                gpu_count: 1
+                gpu_nvidia:
+                    - architecture: Ada
+                      cudaCores: 16384
+                      memoryTotal: "24146608128"
+                      name: NVIDIA GeForce RTX 4090
+                      uuid: GPU-356803a2-a9b4-2f4f-7ee6-fd3a0dd7c276
+                host: SmartBuilding
+                memory:
+                    total: "101065641984"
+                os: Linux-6.8.0-111-generic-x86_64-with-glibc2.35
+                program: /home/katris02/compgcn/run.py
+                python: CPython 3.10.20
+                root: /home/katris02/compgcn
+                startedAt: "2026-06-03T03:07:56.045313Z"
+                writerId: x5j0m7qzq59nigqn7hme7jn9joer0lx4
+        m: []
+        python_version: 3.10.20
+        t:
+            "1":
+                - 1
+            "2":
+                - 1
+            "3":
+                - 13
+                - 16
+            "4": 3.10.20
+            "5": 0.27.0
+            "12": 0.27.0
+            "13": linux-x86_64
+batch_size:
+    value: 128
+bias:
+    value: false
+config_dir:
+    value: ./config/
+dataset:
+    value: brick
+dropout:
+    value: 0.1
+embed_dim:
+    value: 200
+ent_class_idx:
+    value: |-
+        [[  7   0   0]
+         [ 19   0   0]
+         [194   0   0]
+         ...
+         [ 12   0   0]
+         [ 12   0   0]
+         [ 23   0   0]]
+ent_class_mask:
+    value: |-
+        [[1. 0. 0.]
+         [1. 0. 0.]
+         [1. 0. 0.]
+         ...
+         [1. 0. 0.]
+         [1. 0. 0.]
+         [1. 0. 0.]]
+feat_drop:
+    value: 0.3
+gamma:
+    value: 40
+gcn_dim:
+    value: 200
+gcn_layer:
+    value: 2
+gpu:
+    value: "0"
+hid_drop:
+    value: 0.3
+hid_drop2:
+    value: 0.3
+init_dim:
+    value: 100
+k_h:
+    value: 20
+k_w:
+    value: 10
+ker_sz:
+    value: 7
+l2:
+    value: 0
+lbl_smooth:
+    value: 0.1
+log_dir:
+    value: ./log/
+lr:
+    value: 0.001
+max_epochs:
+    value: 500
+model:
+    value: compgcn
+name:
+    value: brick_conve_corr_03_06_2026_11:07:54
+node_feat:
+    value: type
+num_bases:
+    value: -1
+num_class:
+    value: 439
+num_ent:
+    value: 24059
+num_filt:
+    value: 200
+num_rel:
+    value: 11
+num_workers:
+    value: 10
+opn:
+    value: corr
+restore:
+    value: false
+score_func:
+    value: conve
+seed:
+    value: 41504
+yaml_config:
+    value: config/brick.yaml

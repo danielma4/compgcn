@@ -78,17 +78,12 @@ def get_param(shape):
 	xavier_normal_(param.data)
 	return param
 
-def com_mult(a, b):
-	r1, i1 = a[..., 0], a[..., 1]
-	r2, i2 = b[..., 0], b[..., 1]
-	return torch.stack([r1 * r2 - i1 * i2, r1 * i2 + i1 * r2], dim = -1)
-
-def conj(a):
-	a[..., 1] = -a[..., 1]
-	return a
-
 def cconv(a, b):
-	return torch.irfft(com_mult(torch.rfft(a, 1), torch.rfft(b, 1)), 1, signal_sizes=(a.shape[-1],))
+	# Circular convolution via the native-complex FFT API (torch >= 1.8).
+	if a.numel() == 0: return a            # no edges -> no messages (FFT errors on 0 rows)
+	return torch.fft.irfft(torch.fft.rfft(a, dim=-1) * torch.fft.rfft(b, dim=-1), n=a.shape[-1], dim=-1)
 
 def ccorr(a, b):
-	return torch.irfft(com_mult(conj(torch.rfft(a, 1)), torch.rfft(b, 1)), 1, signal_sizes=(a.shape[-1],))
+	# Circular correlation: conj(FFT(a)) * FFT(b), inverse-transformed.
+	if a.numel() == 0: return a            # no edges -> no messages (FFT errors on 0 rows)
+	return torch.fft.irfft(torch.conj(torch.fft.rfft(a, dim=-1)) * torch.fft.rfft(b, dim=-1), n=a.shape[-1], dim=-1)

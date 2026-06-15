@@ -1,0 +1,52 @@
+# Config for the standalone edge-existence model (link_existence.py).
+# Separate from brick.yaml because it sets keys (name_feats/threshold/neg_ratio)
+# that run.py's parser doesn't know — a shared file would fail run.py's key check.
+#
+# Usage:
+#     python link_existence.py --config config/link_exist.yaml
+# Toggle the two ablation knobs on the CLI, e.g.:
+#     ... --data brick            (6 buildings instead of 50)
+#     ... --name_feats false-> just omit; or override --name for a separate run
+
+name:        link_exist_mortar
+dataset:     brick_mortar
+model:       compgcn
+score_func:  distmult
+opn:         corr
+node_feat:   type
+
+# Edge-existence specifics
+name_feats:  true            # append s-o name-overlap features to the edge head
+threshold:   0.75            # fixed decision threshold (accept iff sigmoid(score) >= this); 0.75 = precision-first (test P~0.90 R~0.78); use ~0.65 for balanced F1
+neg_ratio:   10.0            # type-compatible negatives per positive in the eval set
+beta:        0.5             # F-beta for reporting (selection is on AUPRC)
+hard_neg:    10              # type-compatible hard negatives per positive in training (10:1)
+
+# Graph / embedding sizes
+gcn_layer:   2
+init_dim:    100
+gcn_dim:     200
+embed_dim:   200
+num_bases:   -1
+
+# Optimisation
+batch_size:  128
+max_epochs:  500
+lr:          0.001
+l2:          0.0
+lbl_smooth:  0.1
+gamma:       40.0
+
+# Regularisation / dropout
+dropout:     0.1
+hid_drop:    0.3
+hid_drop2:   0.3
+feat_drop:   0.3
+
+# Misc
+gpu:         '0'
+seed:        41504
+num_workers: 10
+cv_alloc:    5               # building-allocation folds (test stays fixed)
+cv_seeds:    3               # seeds per allocation -> 5*3 = 15 runs, reported mean±std
+wandb_disabled: true
