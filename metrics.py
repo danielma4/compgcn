@@ -155,23 +155,16 @@ def format_report(agg, target_rels, id2rel, thr, title='CompGCN two-stage', n_fo
 
     L.append("\nPer-relation:")
     for r in target_rels:
-        s1 = agg['stage1']['per_relation'][r]
         s2 = agg['stage2']['per_relation'][r]
         cm = agg['combined']['per_relation'][r]
         L.append(f"  {rn(r)}:")
-        L.append(f"    Stage1 (existence)  TP {_ms(s1['tp'],1)}  FP {_ms(s1['fp'],1)}  "
-                 f"FN {_ms(s1['fn'],1)}  TN {_ms(s1['tn'],1)}")
-        L.append(f"                        P {_ms(s1['precision'])}  R {_ms(s1['recall'])}  "
-                 f"F1 {_ms(s1['f1'])}  AUPRC {_ms(s1['auprc'])}  AUROC {_ms(s1['auroc'])}")
         L.append(f"    Stage2 (relation)   MRR {_ms(s2['mrr'])}  Hits@1 {_ms(s2['hits1'])}")
         L.append(f"    Combined            P {_ms(cm['precision'])}  R {_ms(cm['recall'])}  F1 {_ms(cm['f1'])}")
 
     s1o, s2o, co, ov = (agg['stage1']['overall'], agg['stage2']['overall'],
                         agg['combined']['overall'], agg['overall'])
     L.append("\nStage 1 alone (existence, pooled):")
-    L.append(f"  TP {_ms(s1o['tp'],1)}  FP {_ms(s1o['fp'],1)}  FN {_ms(s1o['fn'],1)}  TN {_ms(s1o['tn'],1)}")
-    L.append(f"  P {_ms(s1o['precision'])}  R {_ms(s1o['recall'])}  F1 {_ms(s1o['f1'])}  "
-             f"AUPRC {_ms(s1o['auprc'])}  AUROC {_ms(s1o['auroc'])}")
+    L.append(f"  P {_ms(s1o['precision'])}  R {_ms(s1o['recall'])}  F1 {_ms(s1o['f1'])}")
     L.append("Stage 2 alone (relation, oracle existence):")
     L.append(f"  MRR {_ms(s2o['mrr'])}  Hits@1 {_ms(s2o['hits1'])}")
     L.append("Combined pipeline (end-to-end):")

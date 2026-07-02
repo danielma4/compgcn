@@ -1,0 +1,37 @@
+name:        link_exist_combined
+dataset:     brick_mortar_kaggle
+model:       compgcn
+score_func:  distmult
+opn:         corr
+node_feat:   type
+
+name_feats:  true
+threshold:   0.70
+neg_ratio:   10.0
+beta:        0.5
+hard_neg:    10
+
+gcn_layer:   2
+init_dim:    100
+gcn_dim:     200
+embed_dim:   200
+num_bases:   -1
+
+batch_size:  128
+max_epochs:  500
+lr:          0.001
+l2:          0.0
+lbl_smooth:  0.1
+gamma:       40.0
+
+dropout:     0.1
+hid_drop:    0.3
+hid_drop2:   0.3
+feat_drop:   0.3
+
+gpu:         '0'
+seed:        41504
+num_workers: 10
+cv_alloc:    5
+cv_seeds:    3
+wandb_disabled: true

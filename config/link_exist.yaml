@@ -17,7 +17,7 @@ node_feat:   type
 
 # Edge-existence specifics
 name_feats:  true            # append s-o name-overlap features to the edge head
-threshold:   0.75            # fixed decision threshold (accept iff sigmoid(score) >= this); 0.75 = precision-first (test P~0.90 R~0.78); use ~0.65 for balanced F1
+threshold:   0.70            # fixed decision threshold (accept iff sigmoid(score) >= this); 0.75 = precision-first (test P~0.90 R~0.78); use ~0.65 for balanced F1
 neg_ratio:   10.0            # type-compatible negatives per positive in the eval set
 beta:        0.5             # F-beta for reporting (selection is on AUPRC)
 hard_neg:    10              # type-compatible hard negatives per positive in training (10:1)

@@ -1,0 +1,9 @@
+metric,mortar,gear
+rem_triples,38144,8653
+rem_predicates,5,9
+rem_entities,19473,1762
+isolated_after,20,0
+has_type,19387,1716
+has_location,0,0
+subj_ctx_pct,99.6,100.0
+obj_ctx_pct,0.0,1.2

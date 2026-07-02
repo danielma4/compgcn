@@ -1,0 +1,15 @@
+relation,subj_category,obj_category,mortar_count,gear_count,only_mortar,only_gear
+brick:feeds,Equipment,Equipment,2314,31,False,False
+brick:feeds,Equipment,Location,2136,0,True,False
+brick:feeds,Equipment,Other,0,29,False,True
+brick:feeds,Other,Equipment,0,14,False,True
+brick:hasPart,Location,Location,4050,0,True,False
+brick:hasPart,Equipment,Equipment,641,8,False,False
+brick:hasPart,Collection,Equipment,0,379,False,True
+brick:hasPart,Equipment,Other,99,0,True,False
+brick:hasPoint,Equipment,Point,11229,190,False,False
+brick:hasPoint,Equipment,Other,696,0,True,False
+brick:hasPoint,Location,Point,99,0,True,False
+brick:hasPoint,Unrecognised,Point,19,0,True,False
+brick:hasPoint,Other,Point,0,5,False,True
+brick:hasPoint,Unrecognised,Other,1,0,True,False

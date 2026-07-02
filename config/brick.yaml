@@ -16,9 +16,10 @@ model:       compgcn
 score_func:  distmult       # transe | distmult | conve  (distmult: clean relation-prediction objective)
 opn:         corr           # sub | mult | corr  (composition function)
 node_feat:   type           # identity (transductive) | type (inductive: Brick-class features, transfers to new buildings)
-rel_weight:  1.0            # weight of auxiliary relation-prediction loss (predict r from (s,o)); 0 = off
-hard_neg:    10             # type-compatible hard negatives per positive for the edge-existence objective (10:1); 0 = off
-hard_neg_weight: 1.0        # weight of the hard-negative presence loss
+ent_weight:  1.0            # main KvsAll ENTITY-prediction loss — kept on: richer signal -> better embeddings -> higher relation MRR (dropping it cost ~0.06 MRR)
+rel_weight:  1.0            # weight of relation-prediction loss (predict r from (s,o), arXiv:2110.02834); aligned with Stage 2
+hard_neg:    0              # edge-EXISTENCE presence loss — off for Stage 2 (existence is Stage 1's job; was the divergence source)
+hard_neg_weight: 1.0        # weight of the hard-negative presence loss (unused when hard_neg=0)
 beta:        0.5            # F-beta for presence threshold tuning / model selection; <1 favours precision
 
 # Graph / embedding sizes

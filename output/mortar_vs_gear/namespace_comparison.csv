@@ -1,0 +1,51 @@
+namespace,mortar_count,gear_count,only_mortar,only_gear
+<http,77254,114,False,False
+brick,41018,1872,False,False
+rdf,19735,1775,False,False
+rdfs,11600,2560,False,False
+<https,44,12853,False,False
+_,6765,3034,False,False
+ref,6722,3034,False,False
+<urn,3458,0,True,False
+"""FIX_AC-FLOOR DIFFUSER",0,155,False,True
+"""unit",0,114,False,True
+owl,88,0,True,False
+"""TSPL-UNISTRUT",0,74,False,True
+"""EQP_M_AC-PANEL",0,36,False,True
+"""ACS_DU-DAMPER",0,29,False,True
+"""FIX_AC-TEMP SENSOR(CEILING MOUNTED)",0,29,False,True
+"""FIX_AC-Wiremesh_Duct End Hosted1",0,27,False,True
+"""FIX_AC-Return Air Grille1",0,16,False,True
+"""FIX_AC-Suppy Air Grille",0,16,False,True
+"""FIX_AC-FLOOR  DIFFUSER THERMOSTAT",0,8,False,True
+"""FIX_AC-POWER MODULE",0,7,False,True
+"""FIX_AC-Exhaust air grill",0,6,False,True
+"""FIX_AC-ROUND WIREMESH",0,6,False,True
+"""FIX_AC-COANDA DIFFUSER C-1 670X60",0,5,False,True
+"""FIX_AC-BTU SENSOR",0,4,False,True
+"""FIX_AC-DUCT-RADIATION-RETURN",0,4,False,True
+"""FIX_AC-RA GRILLE1",0,4,False,True
+"""ACS_DU-DAMPER1",0,3,False,True
+"""FIX_AC-COANDA DIFFUSER C-2 670x60",0,3,False,True
+"""FIX_AC-COANDA DIFFUSER C-3 670x60",0,3,False,True
+"""FIX_AC-Return air grill",0,3,False,True
+"""FIX_AC-Wiremesh_Duct End Hosted3",0,3,False,True
+"""ACS_DU-I BEAM BASE SUPPORT",0,2,False,True
+"""FIX_AC-COANDA DIFFUSER B-1 585x60",0,2,False,True
+"""FIX_AC-COANDA DIFFUSER C-4 670x60",0,2,False,True
+"""FIX_AC-COANDA DIFFUSER E-1 725X60",0,2,False,True
+"""FIX_AC-SPACE HUMIDITY SENSOR",0,2,False,True
+"""FIX_AC-SupplyDiffuser",0,2,False,True
+"""FIX_AC-Wiremesh_Duct End Hosted2",0,2,False,True
+"""KOAS - Void Square Type",0,2,False,True
+"""MC Void Provision Rectangular Horizontal",0,2,False,True
+"""ACS_DU-DAMPER-PRD",0,1,False,True
+"""ACS_DU-DAMPER-ROUND",0,1,False,True
+"""ELV RACK",0,1,False,True
+"""FIX_AC-Air Terminal",0,1,False,True
+"""FIX_AC-COANDA DIFFUSER B-4 585x60",0,1,False,True
+"""FIX_AC-SUPPLY AIR GRILLE",0,1,False,True
+"""FIX_AC-TEMP & RH COMBO SENSOR",0,1,False,True
+"""FIX_AC-THERMOSTAT",0,1,False,True
+"""TSPL_CENTRIFUGAL FAN ASP 300  BASE SUPPORT",0,1,False,True
+"""TSPL_CENTRIFUGAL FAN ASP 400  BASE SUPPORT",0,1,False,True

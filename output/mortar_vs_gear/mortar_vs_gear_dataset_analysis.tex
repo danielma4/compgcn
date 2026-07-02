@@ -1,0 +1,288 @@
+\documentclass[10pt]{beamer}
+\usepackage{booktabs}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepackage{xcolor}
+\usepackage{array}
+
+\usetheme{Madrid}
+\usecolortheme{seahorse}
+
+\title{Understanding the Differences Between MORTAR and GEAR}
+\subtitle{Dataset Structure, Schema and Distribution Analysis}
+\date{\today}
+
+\begin{document}
+
+%% Slide 1 ─ Title
+\begin{frame}
+  \titlepage
+\end{frame}
+
+%% Slide 2 ─ Purpose
+\begin{frame}{Purpose of the Comparison}
+  \begin{itemize}
+    \item Four prediction approaches are evaluated on the GEAR building:
+          rule-based (PBRR, AnyBURL), tree-based (GBT), and graph neural networks (CompGCN / LLM).
+    \item All approaches depend critically on the structure and schema of the input graph.
+    \item MORTAR (US commercial buildings, Brick schema) was used for development and training.
+    \item GEAR (Singapore lab building) is the held-out transfer target.
+    \item \textbf{This analysis is model-independent.} Findings apply to all four approaches.
+    \item Objective: measure \emph{how} GEAR differs from MORTAR so that schema gaps,
+          structural mismatches, and vocabulary shifts can be addressed at the data level.
+  \end{itemize}
+\end{frame}
+
+%% Slide 3 ─ Dataset Overview
+\begin{frame}{Dataset Overview}
+  \begin{table}
+    \centering
+    \begin{tabular}{lrr}
+      \toprule
+      \textbf{Property} & \textbf{MORTAR} & \textbf{GEAR} \\
+      \midrule
+Buildings & 44 & 1 \\
+Total entities & 19,493 & 1,762 \\
+Norm.\ triples & 59,428 & 9,309 \\
+Unique predicates & 8 & 12 \\
+Unique RDF classes & 85 & 46 \\
+Target edges & 21284 & 656 \\
+Non-target context edges & 38144 & 8653 \\
+REC$\to$Brick remaps & 0 & 0 \\
+Inverse folds applied & 828 & 623 \\
+      \bottomrule
+    \end{tabular}
+  \end{table}
+\end{frame}
+
+%% Slide 4 ─ Target-Relation Distribution
+\begin{frame}{Target-Relation Distribution}
+  \begin{table}
+    \centering
+    \begin{tabular}{lrrrr}
+      \toprule
+      \textbf{Relation} & \multicolumn{2}{c}{\textbf{MORTAR}} & \multicolumn{2}{c}{\textbf{GEAR}} \\
+      \cmidrule(lr){2-3}\cmidrule(lr){4-5}
+                        & Count & \% & Count & \% \\
+      \midrule
+\texttt{brick:feeds} & 4450 & 20.9\% & 74 & 11.3\% \\
+\texttt{brick:hasPart} & 4790 & 22.5\% & 387 & 59.0\% \\
+\texttt{brick:hasPoint} & 12044 & 56.6\% & 195 & 29.7\% \\
+      \midrule
+\textbf{Total} & 21284 & 100\% & 656 & 100\% \\
+      \bottomrule
+    \end{tabular}
+  \end{table}
+  \vspace{0.5em}
+  \begin{itemize}
+    \small
+    \item MORTAR is dominated by \texttt{hasPoint}; GEAR has a much larger \texttt{hasPart} share.
+    \item GEAR \texttt{hasPart} includes IFC collection membership (\texttt{rec:includes}),
+          absent in MORTAR.
+  \end{itemize}
+\end{frame}
+
+%% Slide 5 ─ Predicate and Schema Differences
+\begin{frame}{Predicate and Schema Differences}
+  \begin{columns}[t]
+    \column{0.48\textwidth}
+    \textbf{Common in MORTAR only} (top)\par
+    \vspace{0.3em}
+    \begin{itemize}
+      \item \texttt{owl:imports} (44)
+      \item \texttt{brick:area} (43)
+    \end{itemize}
+    \column{0.48\textwidth}
+    \textbf{Common in GEAR only} (top)\par
+    \vspace{0.3em}
+    \begin{itemize}
+      \item \texttt{\textless{}https://w3id.org/rec\textgreater{}:locatedIn} (601)
+      \item \texttt{\textless{}https://w3id.org/rec\textgreater{}:hasPart} (558)
+      \item \texttt{\textless{}http://qudt.org/schema/qudt\textgreater{}:hasUnit} (114)
+      \item \texttt{\textless{}https://w3id.org/rec\textgreater{}:levelNumber} (9)
+    \end{itemize}
+  \end{columns}
+  \vspace{0.5em}
+  \begin{itemize}
+    \item Predicate vocabulary Jaccard similarity: 0.4286
+    \item Predicate distribution JSD: 0.2161 (0 = identical)
+    \item GEAR uses REC namespace predicates; 0 remapped to Brick equivalents.
+    \item \texttt{brick:hasLocation} appears 0 times in GEAR, 0 in MORTAR.
+    \item Inverse-relation usage: 623 folds in GEAR vs 828 in MORTAR.
+  \end{itemize}
+\end{frame}
+
+%% Slide 6 ─ Entity and Class Differences
+\begin{frame}{Entity and Class Differences}
+  \begin{columns}[t]
+    \column{0.48\textwidth}
+    \textbf{Top MORTAR classes}\par
+    \begin{itemize}
+      \item \texttt{brick:HVAC\_Zone} (2137)
+      \item \texttt{brick:VAV} (2136)
+      \item \texttt{brick:Zone\_Air\_Temperature\_Sensor} (2085)
+      \item \texttt{brick:Room} (2025)
+      \item \texttt{brick:Zone\_Air\_Temperature\_Setpoint} (1631)
+    \end{itemize}
+    \column{0.48\textwidth}
+    \textbf{Top GEAR classes}\par
+    \begin{itemize}
+      \item \texttt{brick:Equipment} (587)
+      \item \texttt{\textless{}https://w3id.org/rec\textgreater{}:Room} (548)
+      \item \texttt{brick:HVAC\_System} (330)
+      \item \texttt{brick:Status} (35)
+      \item \texttt{brick:Emergency\_Alarm} (33)
+    \end{itemize}
+  \end{columns}
+  \vspace{0.4em}
+  \begin{itemize}
+    \item Class vocabulary Jaccard: 0.0738 --- most GEAR classes absent from MORTAR.
+    \item GEAR-only classes include spatial types (Room, Floor, Building) absent in MORTAR training.
+    \item Untyped entities: MORTAR 106 / GEAR 46
+    \item After REC$\to$Brick mapping, spatial GEAR classes gain Brick ancestor embeddings.
+  \end{itemize}
+\end{frame}
+
+%% Slide 7 ─ Ontology Category Distribution
+\begin{frame}{Ontology Category Distribution}
+  \begin{table}
+    \centering
+    \small
+    \begin{tabular}{lrrrr}
+      \toprule
+      \textbf{Category} & \textbf{MORTAR} & \textbf{M\%} & \textbf{GEAR} & \textbf{G\%} \\
+      \midrule
+Equipment & 3008 & 15.5 & 607 & 35.4 \\
+Point & 11248 & 58.0 & 218 & 12.7 \\
+Location & 4275 & 22.1 & 0 & 0.0 \\
+Building & 0 & 0.0 & 0 & 0.0 \\
+System & 0 & 0.0 & 0 & 0.0 \\
+Collection & 0 & 0.0 & 332 & 19.3 \\
+Other & 0 & 0.0 & 0 & 0.0 \\
+Unrecognised & 856 & 4.4 & 559 & 32.6 \\
+      \bottomrule
+    \end{tabular}
+  \end{table}
+\end{frame}
+
+%% Slide 8 ─ Relation Type-Pattern Differences
+\begin{frame}{Relation Type-Pattern Differences}
+  \textbf{\texttt{brick:hasPart}} subject$\to$object category pairs\par
+  \begin{table}
+    \small
+    \begin{tabular}{llrr}
+      \toprule
+      Subject & Object & MORTAR & GEAR \\
+      \midrule
+Location & Location & 4050 & 0 \\
+Equipment & Equipment & 641 & 8 \\
+Collection & Equipment & 0 & 379 \\
+Equipment & Other & 99 & 0 \\
+      \bottomrule
+    \end{tabular}
+  \end{table}
+  \begin{itemize}
+    \item MORTAR \texttt{hasPart}: Equipment$\to$Equipment (HVAC containment).
+    \item GEAR \texttt{hasPart}: Location$\to$Location (IFC/BIM spatial hierarchy) +
+          Collection$\to$* (grouping).
+    \item These are semantically distinct uses of the same predicate.
+  \end{itemize}
+\end{frame}
+
+%% Slide 9 ─ Naming and URI Differences
+\begin{frame}{Naming and URI Differences}
+  \begin{table}
+    \centering
+    \begin{tabular}{lrr}
+      \toprule
+      \textbf{Metric} & \textbf{MORTAR} & \textbf{GEAR} \\
+      \midrule
+Avg local-name length & 62.6 & 52.4 \\
+Avg tokens per name & 9.02 & 8.75 \\
+\% with underscores & 75.8\% & 94.7\% \\
+\% with hyphens & 5.1\% & 33.1\% \\
+\% with numeric IDs & 99.5\% & 97.6\% \\
+      \bottomrule
+    \end{tabular}
+  \end{table}
+  \begin{itemize}
+    \item MORTAR entities use \texttt{bldgN:} namespace (anonymised building IDs).
+    \item GEAR entities use a full IFC filename as namespace prefix.
+    \item Name-similarity features (if used) benefit MORTAR's consistent conventions.
+    \item GEAR contains \texttt{rdfs:label} annotations; MORTAR entities rely on URI tokens only.
+  \end{itemize}
+\end{frame}
+
+%% Slide 10 ─ Graph Structure and Context
+\begin{frame}{Graph Structure and Available Context}
+  \begin{table}
+    \centering
+    \begin{tabular}{lrr}
+      \toprule
+      \textbf{Metric} & \textbf{MORTAR} & \textbf{GEAR} \\
+      \midrule
+Avg entity degree & 5.155 & 7.321 \\
+Max entity degree & 2137 & 587 \\
+Connected components & 5 & 3 \\
+Largest component & 19384 & 1754 \\
+Remaining triples (target removed) & 38144 & 8653 \\
+Isolated after removal & 20 & 0 \\
+Target-subj retaining context (\%) & 99.6\% & 100.0\% \\
+      \bottomrule
+    \end{tabular}
+  \end{table}
+  \begin{itemize}
+    \item Non-target context in GEAR is almost entirely \texttt{rdf:type} and \texttt{brick:hasLocation}.
+    \item Removing target edges leaves many GEAR entities with only their type triple.
+  \end{itemize}
+\end{frame}
+
+%% Slide 11 ─ Main Findings
+\begin{frame}{Main Findings}
+  \textbf{Confirmed Differences}
+  \begin{itemize}
+    \item \texttt{hasPart} semantics differ fundamentally: HVAC containment (MORTAR) vs.\
+          IFC spatial hierarchy + collection membership (GEAR).
+    \item GEAR class vocabulary is largely disjoint from MORTAR (Jaccard 0.0738).
+    \item GEAR uses REC predicates (0 remapped); MORTAR uses Brick natively.
+    \item GEAR non-target context is sparse: mostly \texttt{rdf:type} + \texttt{hasLocation} only.
+    \item \texttt{hasPart} share: 59.0\% in GEAR vs.\
+          22.5\% in MORTAR.
+  \end{itemize}
+  \vspace{0.3em}
+  \textbf{Likely Effects on Graph-Prediction Methods}
+  \begin{itemize}
+    \item Models trained on MORTAR \texttt{hasPart} patterns will not generalise to GEAR's
+          IFC/collection use.
+    \item Sparse context reduces embedding quality for GNN-based approaches.
+    \item Schema heterogeneity affects any method that uses predicate identity as a feature.
+  \end{itemize}
+  \vspace{0.3em}
+  \textbf{Issues Requiring Further Testing}
+  \begin{itemize}
+    \item Whether REC$\to$Brick remapping fully resolves predicate vocabulary mismatch.
+    \item Whether additional Brick ancestor expansion compensates for unseen class distributions.
+  \end{itemize}
+\end{frame}
+
+%% Slide 12 ─ Recommended Data-Level Next Steps
+\begin{frame}{Recommended Data-Level Next Steps}
+  \begin{itemize}
+    \item \textbf{Schema harmonisation:} ensure all GEAR triples are mapped to Brick before
+          evaluation; validate completeness of REC$\to$Brick predicate and class mapping.
+    \item \textbf{Correct malformed URIs:} check for double-prefix Brick URIs and
+          colon-in-local-name patterns in both datasets.
+    \item \textbf{Separate evaluation by relation:} report \texttt{feeds}, \texttt{hasPart},
+          and \texttt{hasPoint} metrics independently to isolate domain-shift effects.
+    \item \textbf{Separate evaluation by entity-type group:} e.g., report results
+          for Equipment-only, Location-only, and Collection subsets of GEAR.
+    \item \textbf{Expand training data:} include buildings with IFC/BIM spatial containment
+          hierarchies and REC-annotated data if available.
+    \item \textbf{Document GEAR custom classes:} entities lacking a Brick equivalent
+          should be explicitly labelled as out-of-vocabulary rather than treated as unknown.
+    \item \textbf{Create a GEAR validation subset:} a small labelled subset stratified by
+          relation type enables calibrated threshold selection without using the test set.
+  \end{itemize}
+\end{frame}
+
+\end{document}

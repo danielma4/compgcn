@@ -137,7 +137,10 @@ class Runner(object):
 					collate_fn      = dataset_class.collate_fn
 				)
 
-		self.data_iter = {'train': get_data_loader(TrainDataset, 'train', self.p.batch_size)}
+		if self.triples['train']:
+			self.data_iter = {'train': get_data_loader(TrainDataset, 'train', self.p.batch_size)}
+		else:
+			self.data_iter = {}
 
 		# Phase-specific message-passing graphs: train on the train buildings'
 		# context; encode each held-out building over its OWN context at eval.
@@ -187,6 +190,7 @@ class Runner(object):
 		self.p.num_class      = len(class2id)
 		self.p.ent_class_idx  = idx
 		self.p.ent_class_mask = mask
+		self.class2id         = class2id
 		self.logger.info('Type features: {} classes, up to {} types/entity'.format(
 			self.p.num_class, max_k))
 
@@ -578,12 +582,14 @@ class Runner(object):
 		losses, rel_losses, hn_losses = [], [], []
 		train_iter = iter(self.data_iter['train'])
 
-		# Auxiliary objectives sharing one GCN encode pass per step:
-		#  - relation prediction (Chen et al., AKBC 2021): predict r from (s, o);
-		#  - hard-negative presence: push true edges' triple score up and
-		#    type-compatible non-edges' score down, so the model learns to decide
-		#    whether an edge exists at all (the deployed task), not just rank
-		#    relations on known edges.
+		# Objectives (all share one GCN encode pass per step):
+		#  - ent_weight: main KvsAll *entity* prediction (predict o given (s,r)). We
+		#    never rank entities at eval, so this is off by default for Stage 2; it
+		#    only shapes the per-entity bias (irrelevant to relation ranking).
+		#  - rel_weight: relation prediction (predict r from (s,o); arXiv:2110.02834)
+		#    — the aligned Stage-2 objective; trains the same trilinear term eval ranks.
+		#  - hard_neg: edge-existence presence (Stage-1's job; off for Stage 2).
+		ent_w   = getattr(self.p, 'ent_weight', 1.0)
 		rel_w   = getattr(self.p, 'rel_weight', 0.0)
 		hn_n    = int(getattr(self.p, 'hard_neg', 0))
 		hn_w    = getattr(self.p, 'hard_neg_weight', 0.0)
@@ -597,8 +603,10 @@ class Runner(object):
 			self.optimizer.zero_grad()
 			sub, rel, obj, label = self.read_batch(batch, 'train')
 
-			pred	= self.model.forward(sub, rel)
-			loss	= self.model.loss(pred, label)
+			loss = None
+			if ent_w > 0:
+				pred = self.model.forward(sub, rel)
+				loss = ent_w * self.model.loss(pred, label)
 
 			if use_rel:
 				if rel_ptr + self.p.batch_size > rel_data.size(0):       # reshuffle when exhausted
@@ -611,7 +619,8 @@ class Runner(object):
 				logits   = self.model.rel_score_all(rb[:, 0], rb[:, 2], all_ent, all_rel)
 				rel_loss = self.rel_criterion(logits, rb[:, 1])
 				rel_losses.append(rel_loss.item())
-				loss	 = loss + rel_w * rel_loss
+				rel_term = rel_w * rel_loss
+				loss     = rel_term if loss is None else loss + rel_term
 
 				if use_hn:
 					ns, nr, no = self.sample_hard_negatives(rb[:, 0], rb[:, 1], hn_n)
@@ -623,7 +632,11 @@ class Runner(object):
 					hn_losses.append(hn_loss.item())
 					loss	   = loss + hn_w * hn_loss
 
+			if loss is None:                                # no active objective (ent_weight=0 and rel_weight=0)
+				raise ValueError('No training objective active: set ent_weight>0 and/or rel_weight>0.')
 			loss.backward()
+			if getattr(self.p, 'grad_clip', 1.0) > 0:
+				torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.p.grad_clip)
 			self.optimizer.step()
 			losses.append(loss.item())
 
@@ -659,7 +672,7 @@ class Runner(object):
 		self._fit_start = time.time()
 		save_base = os.path.join('./checkpoints', self.p.name)
 		self._save_path_base = save_base
-		os.makedirs('./checkpoints', exist_ok=True)
+		os.makedirs(os.path.dirname(save_base), exist_ok=True)
 
 		if self.p.restore:
 			self.load_model(save_base)
@@ -694,8 +707,10 @@ class Runner(object):
 				self.best_val_mrr = val_rel['mrr']
 				self.best_epoch = epoch
 				ckpt = '{}_mrr{:.3f}_e{:03d}'.format(save_base, val_rel['mrr'], epoch)
-				self._best_save_path = ckpt
 				self.save_model(ckpt)
+				if self._best_save_path != ckpt and os.path.exists(self._best_save_path):
+					os.remove(self._best_save_path)        # keep only the current best per fold
+				self._best_save_path = ckpt
 				kill_cnt = 0
 			else:
 				kill_cnt += 1
@@ -727,7 +742,7 @@ class Runner(object):
 		           mode='disabled' if getattr(self.p, 'wandb_disabled', False) else 'online')
 		self._fit_start = time.time()
 		save_base = os.path.join('./checkpoints', self.p.name)
-		os.makedirs('./checkpoints', exist_ok=True)
+		os.makedirs(os.path.dirname(save_base), exist_ok=True)
 
 		# Group the pooled (train+valid) buildings' data and context by building.
 		bof = lambda e: self.id2ent[e].split(':', 1)[0]
@@ -811,6 +826,7 @@ def build_parser():
 	parser.add_argument('--l2', '-l2',		type=float,             default=0.0,			help='L2 Regularization for Optimizer')
 	parser.add_argument('--lr', '-lr',		type=float,             default=0.001,			help='Starting Learning Rate')
 	parser.add_argument('--lbl_smooth', '-lbl_smooth',      dest='lbl_smooth',	type=float,     default=0.1,	help='Label Smoothing')
+	parser.add_argument('--ent_weight', '-ent_weight',	dest='ent_weight',	type=float,     default=1.0,	help='Weight of the main KvsAll entity-prediction loss (predict o given (s,r)). 0 = off; we never rank entities, so Stage 2 can drop or down-weight this.')
 	parser.add_argument('--rel_weight', '-rel_weight',	dest='rel_weight',	type=float,     default=0.0,	help='Weight of the auxiliary relation-prediction loss (0 = off). Predicts r from (s,o); aligns training with the relation-prediction task.')
 	parser.add_argument('--hard_neg', '-hard_neg',		dest='hard_neg',	type=int,       default=0,	help='Type-compatible hard negatives sampled per positive for the presence objective (0 = off).')
 	parser.add_argument('--hard_neg_weight', '-hard_neg_weight', dest='hard_neg_weight', type=float, default=1.0,	help='Weight of the hard-negative presence (edge-existence) loss.')
@@ -840,6 +856,8 @@ def build_parser():
 	parser.add_argument('--logdir', '-logdir',      dest='log_dir',         default='./log/',               help='Log directory')
 	parser.add_argument('--config_dir', '-config',  dest='config_dir',      default='./config/',            help='Config directory (for log_config.json)')
 	parser.add_argument('--config', '-yaml',        dest='yaml_config',     default=None,                   help='Path to a YAML config file. Its values override the built-in defaults; any explicit CLI flag still overrides the YAML.')
+	parser.add_argument('--grad_clip', type=float, default=1.0,
+	                    help='Max gradient norm (clip_grad_norm_) for training stability. 0 disables.')
 	parser.add_argument('--cv_alloc', type=int, default=1,
 	                    help='Building-allocation folds: split the non-test buildings into K '
 	                         'train/valid partitions (test stays fixed). 1 = no cross-validation.')

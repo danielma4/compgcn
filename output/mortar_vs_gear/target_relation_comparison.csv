@@ -1,0 +1,4 @@
+relation,mortar_count,gear_count,mortar_pct_target,gear_pct_target,mortar_pct_all,gear_pct_all,mortar_unique_subj,gear_unique_subj,mortar_unique_obj,gear_unique_obj,mortar_avg_per_subj,gear_avg_per_subj,mortar_med_per_subj,gear_med_per_subj,mortar_max_per_subj,gear_max_per_subj,mortar_repeated_pairs,gear_repeated_pairs
+brick:feeds,4450,74,20.9,11.3,7.49,0.79,2261,42,4439,25,1.97,1.76,1,1,86,10,0,4
+brick:hasPart,4790,387,22.5,59.0,8.06,4.16,2835,217,2765,210,1.69,1.78,1,1,115,11,0,0
+brick:hasPoint,12044,195,56.6,29.7,20.27,2.09,3071,64,11943,195,3.92,3.05,3,3,24,18,2,0

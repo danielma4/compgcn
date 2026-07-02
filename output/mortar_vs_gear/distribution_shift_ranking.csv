@@ -1,0 +1,11 @@
+metric,value,note
+gear_untyped_entity_pct,2.6,GEAR only
+class_distribution_JSD,0.9777,
+mortar_untyped_entity_pct,0.5,MORTAR only
+ontology_category_JSD,0.4365,
+predicate_vocab_jaccard,0.4286,"1=identical,0=disjoint"
+degree_distribution_JSD,0.3917,
+predicate_distribution_JSD,0.2161,"0=identical,1=disjoint"
+target_relation_balance_JSD,0.1023,
+class_vocab_jaccard,0.0738,
+gear_isolated_after_removal_pct,0,absolute count

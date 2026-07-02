@@ -43,7 +43,7 @@ from run import build_parser, parse_with_yaml, Runner
 from name_overlap_check import tokens, ngrams, jaccard
 import presence as P
 
-PAIR_FEAT_DIM = 3   # tok_jaccard, id_shared, char3_jac
+PAIR_FEAT_DIM = 6   # tok_jaccard, id_shared, char3_jac, head_logdeg, tail_logdeg, deg_ratio
 
 
 class LinkRunner(Runner):
@@ -64,17 +64,42 @@ class LinkRunner(Runner):
 		self._num = [{t for t in s if t.isdigit()} for s in self._tok]
 		self._ng  = [ngrams(self.id2ent[i]) for i in range(self.p.num_ent)]
 
-	def name_feats(self, subs, objs):
-		"""(B, 3) name-overlap features for ordered pairs, or None if disabled."""
+	def _build_struct_cache(self, edge_index):
+		"""Log-degree features from the message-passing graph used at this split.
+
+		hasPart hub nodes (floors, collections) have high out-degree; leaf
+		equipment/sensor nodes have low out-degree. This structural signal
+		generalises across buildings without relying on entity names or types.
+		"""
+		import math
+		num_ent = self.p.num_ent
+		src = edge_index[0].cpu().tolist()
+		dst = edge_index[1].cpu().tolist()
+		out_deg = [0] * num_ent
+		in_deg  = [0] * num_ent
+		for s, d in zip(src, dst):
+			out_deg[s] += 1
+			in_deg[d]  += 1
+		self._log_out = [math.log1p(d) for d in out_deg]
+		self._log_in  = [math.log1p(d) for d in in_deg]
+
+	def name_feats(self, subs, objs, edge_index=None):
+		"""(B, 6) pair features: 3 name-overlap + 3 structural, or None if disabled."""
 		if not getattr(self.p, 'name_feats', False):
 			return None
 		if getattr(self, '_tok', None) is None:
 			self._build_name_cache()
+		if getattr(self, '_log_out', None) is None:
+			self._build_struct_cache(self.edge_index if edge_index is None else edge_index)
 		rows = []
 		for s, o in zip(subs.tolist(), objs.tolist()):
+			hld = self._log_out[s]
+			tld = self._log_in[o]
+			ratio = hld / (tld + 1e-6)
 			rows.append((jaccard(self._tok[s], self._tok[o]),
 				     1.0 if (self._num[s] & self._num[o]) else 0.0,
-				     jaccard(self._ng[s], self._ng[o])))
+				     jaccard(self._ng[s], self._ng[o]),
+				     hld, tld, ratio))
 		return torch.tensor(rows, dtype=torch.float, device=self.device)
 
 	# ---- training ---------------------------------------------------------
@@ -98,6 +123,8 @@ class LinkRunner(Runner):
 
 			loss = self.bce(logit, label)
 			loss.backward()
+			if getattr(self.p, 'grad_clip', 1.0) > 0:
+				torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.p.grad_clip)
 			self.optimizer.step()
 			losses.append(loss.item())
 		return float(np.mean(losses)) if losses else 0.0
@@ -120,6 +147,10 @@ class LinkRunner(Runner):
 		graph = {'valid': (self.edge_index_valid, self.edge_type_valid),
 			 'test':  (self.edge_index_test,  self.edge_type_test)}.get(
 				 eset['split'], (self.edge_index, self.edge_type))
+		ei = graph[0]
+		# Rebuild struct cache for the split-specific graph (degree changes between splits).
+		self._log_out = None
+		self._build_struct_cache(ei)
 		bs = self.p.batch_size
 		with torch.no_grad():
 			all_ent, _ = self.model.encode(*graph)
@@ -131,7 +162,7 @@ class LinkRunner(Runner):
 					subs = torch.tensor([p[0] for p in b], dtype=torch.long, device=self.device)
 					objs = torch.tensor([p[1] for p in b], dtype=torch.long, device=self.device)
 					out[st:st + len(b)] = torch.sigmoid(
-						self.model.edge_score(subs, objs, all_ent, self.name_feats(subs, objs))).cpu().numpy()
+						self.model.edge_score(subs, objs, all_ent, self.name_feats(subs, objs, ei))).cpu().numpy()
 				return out
 
 			cov_pres = score(eset['cov'])
@@ -161,7 +192,7 @@ class LinkRunner(Runner):
 	def fit_existence(self, neg_ratio, beta):
 		self._fit_start = time.time()
 		save_base = os.path.join('./checkpoints', self.p.name)
-		os.makedirs('./checkpoints', exist_ok=True)
+		os.makedirs(os.path.dirname(save_base), exist_ok=True)
 		ckpt = self._fit_existence_fold(save_base, neg_ratio, beta)
 		self.load_model(ckpt)
 		self.report(neg_ratio, beta)
@@ -186,8 +217,11 @@ class LinkRunner(Runner):
 					val['recall'], val['f1'], beta, val['fbeta'], val['tp'], val['fp'], val['fn']))
 			if val['auprc'] > self.best_val_auprc:
 				self.best_val, self.best_val_auprc, self.best_epoch = val, val['auprc'], epoch
-				self._best_save_path = '{}_auprc{:.3f}_e{:03d}'.format(save_base, val['auprc'], epoch)
-				self.save_model(self._best_save_path)
+				ckpt = '{}_auprc{:.3f}_e{:03d}'.format(save_base, val['auprc'], epoch)
+				self.save_model(ckpt)
+				if self._best_save_path != ckpt and os.path.exists(self._best_save_path):
+					os.remove(self._best_save_path)        # keep only the current best per fold
+				self._best_save_path = ckpt
 				kill_cnt = 0
 			else:
 				kill_cnt += 1

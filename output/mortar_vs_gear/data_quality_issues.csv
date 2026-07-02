@@ -1,0 +1,11 @@
+dataset,issue,count,pct,note
+MORTAR,untyped_entities,106,0.5,entities with no rdf:type
+GEAR,untyped_entities,46,2.6,entities with no rdf:type
+MORTAR,raw_duplicates,38,,
+GEAR,raw_duplicates,1683,,
+MORTAR,malformed_uris,0,,
+GEAR,malformed_uris,0,,
+MORTAR,folds_applied,828,,inverse->canonical
+GEAR,folds_applied,623,,inverse->canonical
+MORTAR,remaps_applied,0,,REC->Brick
+GEAR,remaps_applied,0,,REC->Brick

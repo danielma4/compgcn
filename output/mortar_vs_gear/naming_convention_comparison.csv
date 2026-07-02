@@ -1,0 +1,7 @@
+metric,mortar,gear
+avg_local_len,62.6,52.4
+avg_tokens,9.02,8.75
+pct_dot,95.2,97.6
+pct_underscore,75.8,94.7
+pct_hyphen,5.1,33.1
+pct_numeric,99.5,97.6

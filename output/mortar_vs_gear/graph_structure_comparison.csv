@@ -1,0 +1,12 @@
+metric,mortar,gear
+n_entities,19493,1762
+n_predicates,8,12
+avg_degree,5.155,7.321
+median_degree,3,5
+max_degree,2137,587
+subj_only,260,753
+obj_only,86,46
+n_components,5,3
+largest_comp,19384,1754
+isolated_nodes,0,0
+graph_density,0.000156,0.002998
